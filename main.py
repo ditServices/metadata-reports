@@ -12,14 +12,32 @@ class DataReport:
     def __init__(self, sourcefile, outfile, title):
         print(sourcefile, outfile)
 
-        df = pd.read_csv(sourcefile)
-        data_report = pd.pivot_table(df, index=["Name", "Camera"])
+        col_order = ['File Name', 'Camera #', 'Resolution', 'Duration TC',
+                     'Video Codec', 'Frame Rate', 'Comments']
 
+        df = pd.read_csv(sourcefile,
+                         encoding="utf-16",
+                         usecols=['File Name', 'Camera #', 'Resolution', 'Duration TC', 'Video Codec', 'Frame Rate', 'Comments'],
+                         dtype={"File Name": str,
+                                "Camera #": str,
+                                "Resolution": str,
+                                "Duration TC": str,
+                                "Video Codec": str,
+                                "Frame Rate": float,
+                                "Comments": str,
+                                'Date Modified': str,
+                                'Date Recorded': str
+                                },
+                         na_values=['.', '??', ' ']  # Take any '.' or '??' values as NA
+                         )
+
+        df = df[col_order]
+        print(df.head())
         env = Environment(loader=FileSystemLoader('.'))
         template = env.get_template("report_template.html")
 
         template_vars = {"title": title,
-                         "data": data_report.to_html(),
+                         "data": df.to_html(),
                          "date": self.date,
                          }
 
